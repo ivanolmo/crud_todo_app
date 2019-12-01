@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_script import Manager
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://' \
@@ -7,18 +9,20 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://' \
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['DEBUG'] = True
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 
 class Todo(db.Model):
     __tablename__ = 'todo'
     id = db.Column(db.Integer, primary_key=True)
-    item = db.Column(db.String(), nullable=False)
+    item = db.Column(db.String(128), nullable=False)
+    completed = db.Column(db.Boolean, nullable=False, default=False)
 
     def __repr__(self):
         return f'<ToDo {self.id} - {self.item}>'
 
-
-db.create_all()
+# Migrate will now create tables
+# db.create_all()
 
 
 @app.route('/')
