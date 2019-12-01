@@ -1,12 +1,55 @@
-<html>
+<html lang="en-US">
     <head>
         <title>ToDo App</title>
+        <style>
+            .hidden {
+                display: none;
+            }
+        </style>
     </head>
     <body>
-        <ul>
+        <form id="form">
+            <div>
+                <label>Add to your todo list here!</label><br>
+                <input type="text" id="todo-item" name="todo-item"><br>
+            </div>
+            <div>
+                <input type="submit" id="submit" value="ADD" />
+            </div>
+        </form>
+        <div id="error" class="hidden">Something went wrong!</div>
+        <ul id="todo">
             {% for d in data %}
-            <li>{{ d.description }}</li>
+            <li>{{ d.item }}</li>
             {% endfor %}
         </ul>
+        <script>
+            document.getElementById('form').onsubmit = function(e) {
+                e.preventDefault();
+                fetch('/todo/create', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        'todo-item': document.getElementById('todo-item').value
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(jsonResponse) {
+                    console.log(jsonResponse);
+                    const liItem = document.createElement('LI');
+                    liItem.innerHTML = jsonResponse['todo-item'];
+                    document.getElementById('todo').appendChild(liItem);
+                    document.getElementById('form').reset();
+                    document.getElementById('error').className = 'hidden';
+                })
+                    .catch(function() {
+                        document.getElementById('error').className = '';
+                    })
+            }
+        </script>
     </body>
 </html>
