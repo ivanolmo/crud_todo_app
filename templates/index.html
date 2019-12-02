@@ -5,6 +5,27 @@
             .hidden {
                 display: none;
             }
+            ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                width: 200px;
+            }
+            li {
+                clear: both;
+            }
+            li button {
+                -webkit-appearance: none;
+                border: none;
+                outline: none;
+                color: red;
+                float: right;
+                cursor: pointer;
+                font-size: 1em;
+            }
+            .check-completed {
+                border-color: blue;
+            }
         </style>
     </head>
     <body>
@@ -20,10 +41,56 @@
         <div id="error" class="hidden">Something went wrong!</div>
         <ul id="todo">
             {% for d in data %}
-            <li>{{ d.item }}</li>
+            <li>
+                <input class="check-completed" data-id="{{ d.id }}" type="checkbox" {% if d.completed %} checked
+                {% endif %}/>
+                {{ d.item }}
+                <button class="delete-button" data-id="{{ d.id }}">&cross;</button>
+            </li>
             {% endfor %}
         </ul>
         <script>
+            // this will add complete/incomplete functionality to the checkboxes in the todo list
+            const checkboxes = document.querySelectorAll('.check-completed');
+            for (let i = 0; i < checkboxes.length; i++) {
+                const checkbox = checkboxes[i];
+                checkbox.onchange = function(e) {
+                    console.log('event', e);
+                    const newCompleted = e.target.checked;
+                    const todoID = e.target.dataset['id'];
+                    fetch('/todo/' + todoID + '/set-completed', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            'completed': newCompleted
+                        }),
+                        headers: {
+                            'Content-type': 'application/json'
+                        }
+                    })
+                    .then(function() {
+                            document.getElementById('error').className = 'hidden';
+                        })
+                    .catch(function() {
+                        document.getElementById('error').className = '';
+                    })
+                }
+            }
+            // this will add delete functionality to the 'x' on each line
+            const deleteButtons = document.querySelectorAll('.delete-button');
+            for (let i = 0; i < deleteButtons.length; i++) {
+                const button = deleteButtons[i];
+                button.onclick = function(e) {
+                    const todoID = e.target.dataset['id'];
+                    fetch('/todo/' + todoID + '/delete-todo', {
+                        method: 'DELETE'
+                    })
+                    .then(function() {
+                        const toDelete = e.target.parentElement;
+                        toDelete.remove();
+                    })
+                }
+            }
+            // this will add new todo items to the todo list
             document.getElementById('form').onsubmit = function(e) {
                 e.preventDefault();
                 fetch('/todo/create', {
