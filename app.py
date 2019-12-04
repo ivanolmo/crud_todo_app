@@ -11,7 +11,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['DEBUG'] = True
 
 db = SQLAlchemy(app)
-migrate = Migrate(app, db)
+migrate = Migrate(app, db, compare_type=True)
 
 
 class Todo(db.Model):
@@ -20,7 +20,7 @@ class Todo(db.Model):
     item = db.Column(db.String(128), nullable=False)
     completed = db.Column(db.Boolean, nullable=False, default=False)
     list_id = db.Column(db.Integer, db.ForeignKey('todolists.id'),
-                        nullable=False)
+                        nullable=True)
 
     def __repr__(self):
         return f'<ToDo {self.id} - {self.item}>'
@@ -32,13 +32,22 @@ class TodoList(db.Model):
     name = db.Column(db.String(), nullable=False)
     children = db.relationship('Todo', backref='list', lazy=True)
 
+    def __repr__(self):
+        return f'<ToDo List {self.id} - {self.name}>'
+
 # Migrate will now create tables
 # db.create_all()
 
 
 @app.route('/')
 def index():
-    return render_template('index.html', data=Todo.query.order_by('id').all())
+    return redirect(url_for('get_list_todos', list_id=1))
+
+
+@app.route('/lists/<list_id>')
+def get_list_todos(list_id):
+    return render_template('index.html', data=Todo.query
+                           .filter_by(list_id=list_id).order_by('id').all())
 
 
 @app.route('/todo/create', methods=['POST'])
