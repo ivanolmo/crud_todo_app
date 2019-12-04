@@ -19,10 +19,18 @@ class Todo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     item = db.Column(db.String(128), nullable=False)
     completed = db.Column(db.Boolean, nullable=False, default=False)
+    list_id = db.Column(db.Integer, db.ForeignKey('todolists.id'),
+                        nullable=False)
 
     def __repr__(self):
         return f'<ToDo {self.id} - {self.item}>'
 
+
+class TodoList(db.Model):
+    __tablename__ = 'todolists'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(), nullable=False)
+    children = db.relationship('Todo', backref='list', lazy=True)
 
 # Migrate will now create tables
 # db.create_all()
